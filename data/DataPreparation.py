@@ -165,9 +165,20 @@ class DataPreparation(object):
 			self.draw_bounding_box(_img, face_x, face_y, width, height, image)
 			self.debug_count += 1
 
+		if (not self.check_loaded_image(_img)):
+			return None
+
 		resized = self.change_shape_and_size(_img, face_x, face_y, face_x+width, face_y+height)
 
 		return resized
+
+	def check_loaded_image(self, image):
+		h, w, c = image.shape
+
+		if (h < 150 or w < 150 or c < 3):
+			return False
+
+		return True
 
 	def check_image(self, person, image):
 		t = os.path.join(person, image)
@@ -176,8 +187,8 @@ class DataPreparation(object):
 			if (int(details['FACE_WIDTH']) < 60 or int(details['FACE_HEIGHT']) < 60):
 				return False
 
-			# if (abs(details['ROLL']) > 2 or abs(details['PITCH']) > 2 or abs(details['YAW']) > 2):
-			# 	return False
+			if (abs(details['ROLL']) > 10 or abs(details['PITCH']) > 10 or abs(details['YAW']) > 10):
+				return False
 
 			return True
 		else:
