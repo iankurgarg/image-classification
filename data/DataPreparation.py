@@ -3,7 +3,6 @@ import os
 import cv2
 import math, random
 
-import urllib
 import numpy as np
 import pandas as pd
 
