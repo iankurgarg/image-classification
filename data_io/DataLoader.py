@@ -38,7 +38,7 @@ class DataLoader(object):
 			if (_img is not None):
 				non_faces.append(_img)
 
-		return faces, non_faces
+		return np.array(faces),  np.array(non_faces)
 
 	def flatten_images(self, images):
 		return [self.flatten_image(img) for img in images]
@@ -51,10 +51,9 @@ class DataLoader(object):
 		return img.reshape(dim[0]*dim[1]*dim[2])
 
 	def unflatten_image(self, img):
-		dim3 = 3
-		temp = img.shape[0]/3
+		temp = img.shape[0]
 		dim1 = int(math.sqrt(temp))
-		return img.reshape((dim1, dim1, dim3))
+		return img.reshape((dim1, dim1))
 
 	def mean_face(self, faces):
 		m = np.mean(faces, axis=0)
@@ -63,7 +62,7 @@ class DataLoader(object):
 
 	def load_image(self, img_path):
 		try:
-			_img = cv2.imread(img_path)
+			_img = cv2.imread(img_path, 0).flatten()
 			return _img
 		except:
 			print "Unable to laod image from ", img_path
