@@ -73,15 +73,18 @@ if __name__ == '__main__':
 	show_mean(face)
 	show_cov(face)
 
-	m = Model()
+	m = Model1()
 	m.fit(face, non_face)
 
 	test_face, test_non_face = dl.load_data(train=0)
 	testX = np.concatenate((test_face, test_non_face))
 	testY = [1]*len(test_face) + [0]*len(test_non_face)
 
-	predicted = m.predict(testX)
+	for thresh in np.arange(0.1, 0.9, 0.1):
+		print "thresh = ", thresh
+		m.thresh = thresh
+		predicted = m.predict(testX)
 
-	print "false_positive_rate = ", m.false_positive_rate(testY, predicted)
-	print "false_negative_rate = ", m.false_negative_rate(testY, predicted)
-	print "misclassification_rate = ", m.misclassification_rate(testY, predicted)
+		print "false_positive_rate = ", m.false_positive_rate(testY, predicted)
+		print "false_negative_rate = ", m.false_negative_rate(testY, predicted)
+		print "misclassification_rate = ", m.misclassification_rate(testY, predicted)
