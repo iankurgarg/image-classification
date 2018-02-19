@@ -1,6 +1,7 @@
 import os
 
 import cv2
+from PIL import Image, ImageStat, ImageChops
 import math, random
 
 import numpy as np
@@ -34,29 +35,33 @@ class DataPreparation(object):
 
 		self.debug_mode = False
 		self.debug_count = 0
-		random.seed(1)
+		self.debug_var1 = 0
+		random.seed(10)
 
 	def run(self, train_images, test_images):
 		persons = os.listdir(self.input_dir)
 		persons = [x for x in persons if os.path.isdir(os.path.join(self.input_dir, x))]
 		random.shuffle(persons)
 		N = len(persons)
-		tN = int(0.8*N)
+		tN = int(0.5*N)
 		train_persons = persons[:tN]
 		test_persons = persons[tN:]
 
 		print "Loading Face Training Images"
-		face_imgs = self.generate_face_images(train_persons, train_images)
-		self.save_images(face_imgs, os.path.join(self.out_dir[1], 'face'))
+		face_imgs, face_names = self.generate_face_images(train_persons, train_images)
+		self.save_images(face_imgs, face_names, os.path.join(self.out_dir[1], 'face'))
 
 		print "Loading Face Test Images"
-		face_imgs = self.generate_face_images(test_persons, test_images)
-		self.save_images(face_imgs, os.path.join(self.out_dir[0], 'face'))
+		face_imgs, face_names = self.generate_face_images(test_persons, test_images)
+		self.save_images(face_imgs, face_names, os.path.join(self.out_dir[0], 'face'))
 
+		print "self.debug_var1 = ", self.debug_var1
+		
 		print "Loading Background Images"
 		bg_images = self.generate_background_images(train_images+test_images)
-		self.save_images(bg_images[:train_images], os.path.join(self.out_dir[1], 'non-face'))
-		self.save_images(bg_images[train_images:], os.path.join(self.out_dir[0], 'non-face'))
+		face_names = ["a"]*len(bg_images)
+		self.save_images(bg_images[:train_images], face_names, os.path.join(self.out_dir[1], 'non-face'))
+		self.save_images(bg_images[train_images:], face_names, os.path.join(self.out_dir[0], 'non-face'))
 
 	def generate_face_images(self, persons, num):
 		j = 0
@@ -68,11 +73,13 @@ class DataPreparation(object):
 			images_per_person = int(len(persons)/num) + 1
 
 		face_images = []
+		face_names = []
 
 		for idx, p in enumerate(persons):
 			processed_images, rem = self.process_person(p, images_per_person+rem)
 
 			face_images += processed_images
+			face_names += [p]*len(processed_images)
 
 			if (len(face_images) >= num):
 				rem = 0
@@ -84,7 +91,7 @@ class DataPreparation(object):
 		if (rem > 0):
 			print "Couldn't process all " , num, " images. Failed to load ", rem, " training images"
 
-		return face_images
+		return face_images, face_names
 
 	def generate_background_images(self, num):
 		all_images = list(self.annotations.index)
@@ -169,6 +176,10 @@ class DataPreparation(object):
 
 		resized = self.change_shape_and_size(_img, face_x, face_y, face_x+width, face_y+height)
 
+		if (self.is_grayscale(resized)):
+			self.debug_var1+=1
+			return None
+
 		return resized
 
 	def check_loaded_image(self, image):
@@ -176,8 +187,25 @@ class DataPreparation(object):
 
 		if (h < 150 or w < 150 or c < 3):
 			return False
-
+		
 		return True
+
+	def is_grayscale(self, im):
+		h, w, c = im.shape
+		
+		diff = 0.0
+		for i in range(h):
+			for j in range(w):
+				r,g,b = im[i,j]
+				
+				rg = abs(r-g);
+				rb = abs(r-b);
+				gb = abs(g-b);
+				diff += rg+rb+gb;
+
+		if (diff < 100):
+			return True
+		return False
 
 	def check_image(self, person, image):
 		t = os.path.join(person, image)
@@ -219,17 +247,17 @@ class DataPreparation(object):
 
 		cv2.imwrite(os.path.join(out_dir, out_path), _img)
 
-	def save_images(self, images, save_dir):
+	def save_images(self, images, face_names, save_dir):
 		if (not os.path.exists(save_dir)):
 			os.makedirs(save_dir)
 
 		i = 0
 
 		for img in images:
-			cv2.imwrite(os.path.join(save_dir, str(i)+'.jpg'), img)
+			cv2.imwrite(os.path.join(save_dir, str(i)+"_" +face_names[i]+'.jpg'), img)
 			i += 1
 
 if __name__ == '__main__':
-	d = DataPreparation('/Users/iankurgarg/Code/Vision/Project-1/umdfaces/umdfaces_batch3', '/Users/iankurgarg/Code/Vision/Project-1/image-classification/images')
-	d.run(1000, 100)
+	d = DataPreparation('/Users/iankurgarg/Code/Vision/Project-1/umdfaces/umdfaces_batch3', '/Users/iankurgarg/Code/Vision/Project-1/image-classification/images-2')
+	d.run(1000, 1000)
 

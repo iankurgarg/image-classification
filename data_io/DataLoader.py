@@ -62,7 +62,7 @@ class DataLoader(object):
 
 	def load_image(self, img_path):
 		try:
-			_img = cv2.imread(img_path, 1).flatten()
+			_img = cv2.imread(img_path).flatten()
 			return _img
 		except:
 			print "Unable to laod image from ", img_path
