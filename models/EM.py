@@ -85,7 +85,7 @@ class EM(object):
 		diff = new_L - self.L
 		
 		# print "percentage change = ", diff/float(abs(self.L))
-		if (diff > 0 and diff/float(abs(self.L)) > 0.00001):
+		if (diff > 0 and diff/float(abs(self.L)) > 0.000001):
 			self.L = new_L
 			return False
 		

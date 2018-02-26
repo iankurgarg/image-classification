@@ -81,8 +81,8 @@ if __name__ == '__main__':
 	testY = [1]*len(test_face) + [0]*len(test_non_face)
 
 
-	# predicted = m.predict(testX)
+	predicted = m.predict(testX)
 
-	# print "false_positive_rate = ", m.false_positive_rate(testY, predicted)
-	# print "false_negative_rate = ", m.false_negative_rate(testY, predicted)
-	# print "misclassification_rate = ", m.misclassification_rate(testY, predicted)
+	print "false_positive_rate = ", m.false_positive_rate(testY, predicted)
+	print "false_negative_rate = ", m.false_negative_rate(testY, predicted)
+	print "misclassification_rate = ", m.misclassification_rate(testY, predicted)

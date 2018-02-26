@@ -38,7 +38,7 @@ class DataLoader(object):
 			if (_img is not None):
 				non_faces.append(_img)
 
-		return np.array(faces),  np.array(non_faces)
+		return np.matrix(faces),  np.matrix(non_faces)
 
 	def flatten_images(self, images):
 		return [self.flatten_image(img) for img in images]
