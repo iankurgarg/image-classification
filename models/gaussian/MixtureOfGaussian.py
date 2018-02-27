@@ -5,19 +5,15 @@ import numpy as np
 from sklearn.preprocessing import normalize
 from scipy.stats import multivariate_normal
 
+from BaseEM import BaseEM
 
-
-class MixtureOfGaussian(object):
+class MixtureOfGaussian(BaseEM):
 	def __init__(self, n_components=2):
-		self.thresh = 0.5
 		self.n_components = n_components
 		self.params = {}
 		self.weights = None
-		self.max_iter = 4000
 		self.prior_probs = None
 		self.models = {}
-
-		self.L = 0.0
 
 		# np.random.seed(1)
 
@@ -38,14 +34,13 @@ class MixtureOfGaussian(object):
 
 		self.prior_probs = self.calculate_prior_probs()
 		# print "self.prior_probs = ", self.prior_probs
+		self.update_model()
 
 
 	def expectation(self, data):
 		weights = []
 		for i in range(self.n_components):
-			# print "mean = ", self.params[i]['mean']
-			m = multivariate_normal(mean=self.params[i]['mean'], cov=self.params[i]['cov'])
-			wi = m.pdf(data)
+			wi = self.models[i].pdf(data)
 			weights.append(wi)
 		
 		weights = np.matrix(weights).transpose()
@@ -56,58 +51,9 @@ class MixtureOfGaussian(object):
 		self.weights = normalize(weights, norm='l1', axis=1)
 		# print "self.weights = ", self.weights
 
-
-	def calcualte_overall_likelihood(self, data):
-		weights = []
+	def update_model(self):
 		for i in range(self.n_components):
-			m = multivariate_normal(mean=self.params[i]['mean'], cov=self.params[i]['cov'])
-			wi = m.pdf(data)
-			weights.append(wi)
-		
-		weights = np.matrix(weights).transpose()
-		# Element wise multiply with corresponding prior probs
-		weights = np.multiply(weights, self.prior_probs)
-
-		# likelihood_probs should be of shape (n_samples, 1)
-		likelihood_probs = np.sum(weights, axis=1)
-
-		L = np.sum(np.log(likelihood_probs))
-		return L
-	
-	# checks if termination condition is achieved
-	def terimation(self, data):
-		new_L = self.calcualte_overall_likelihood(data)
-		diff = new_L - self.L
-		
-		# print "percentage change = ", diff/float(abs(self.L))
-		if (diff > 0 and diff/float(abs(self.L)) > 0.000001):
-			self.L = new_L
-			return False
-		
-		return True
-
-	def run(self, data):
-		i = 0
-		self.setup(data)
-		# print "self.weights = ", self.weights
-		# print "self.prior_probs = ", self.prior_probs
-
-		while (i < self.max_iter):
-			i += 1
-			self.expectation(data)
-			self.maximization(data)
-
-			if self.terimation(data):
-				break;
-
-			# print "Completed Iteration ", i
-
-		# print "Finished EM. Last Iteration Number = ", i, " max iter = ", self.max_iter
-		# print "self.prior_probs = ", self.prior_probs
-
-		for i in range(self.n_components):
-			m = multivariate_normal(mean=self.params[i]['mean'], cov=self.params[i]['cov'])
-			self.models[i] = m
+			self.models[i] = multivariate_normal(mean=np.array(self.params[i]['mean']).ravel(), cov=self.params[i]['cov'])
 	
 	# Function for initial setup for EM
 	def setup(self, data):
@@ -131,6 +77,7 @@ class MixtureOfGaussian(object):
 
 		# shape of prior probs here should be (1, n_components)
 		self.prior_probs = self.calculate_prior_probs()
+		self.update_model()
 		self.L = self.calcualte_overall_likelihood(data)
 
 	def pdf(self, X):

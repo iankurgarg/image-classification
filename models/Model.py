@@ -53,11 +53,11 @@ class Model(BaseModel):
 			self.dist2 = TDistribution()
 			self.dist2.run(pca_non_face)
 		elif (self.model_type == 'factor'):
-			self.dist1 = FactorAnalyzer()
-			self.dist1.run(pca_face, 5)
+			self.dist1 = FactorAnalyzer(5)
+			self.dist1.run(pca_face)
 
 			self.dist2 = FactorAnalyzer()
-			self.dist2.run(pca_non_face, 5)
+			self.dist2.run(pca_non_face)
 
 
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
 	face, non_face = dl.load_data(train=1)
 
-	m = Model(mtype='factor')
+	m = Model(mtype='mog')
 	m.fit(face, non_face)
 
 	test_face, test_non_face = dl.load_data(train=0)
