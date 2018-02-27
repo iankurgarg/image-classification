@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
 	face, non_face = dl.load_data(train=1)
 
-	m = Model(mtype='mog')
+	m = Model(mtype='t-dist')
 	m.fit(face, non_face)
 
 	test_face, test_non_face = dl.load_data(train=0)

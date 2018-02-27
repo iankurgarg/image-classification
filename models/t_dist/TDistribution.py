@@ -1,39 +1,25 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import numpy as np
 from scipy.stats import multivariate_normal
 from scipy.special import digamma, gammaln, gamma
-from data_io.DataLoader import DataLoader
-import numpy as np
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import normalize
-from sklearn.decomposition import PCA
+from BaseEM import BaseEM
 
-from Visualization import *
-
-
-class TDistribution(object):
+class TDistribution(BaseEM):
 	def __init__(self, n_components=2):
 		self.n_components = n_components
 		self.max_v = 100
 		self.mean, self.cov, self.v = None, None, float(100)
 		
 		self.delta, self.Eh, self.Elogh = None, None, None
-		
-		self.max_iter = 40
 		self.models = {}
-
-		self.L = None
 		self.D = 1.0
 
 		self.tcosts = []
 
 		# np.random.seed(1)
-
-	# def gamma(self, x):
-	# 	return gamma.pdf(x, a=self.v/2, scale=self.v/2)
-
 
 	def tCost(self, v):
 		v = float(v)
@@ -94,8 +80,6 @@ class TDistribution(object):
 		self.Eh = np.reciprocal(self.delta + self.v, dtype=float) * (self.v + self.D)
 		self.Elogh = digamma(self.v/2 + self.D/2) - np.log(self.v/2 + self.delta/2, dtype=float)
 
-
-
 	def calcualte_overall_likelihood(self, data):
 		for i in range(len(self.delta)):
 			temp = np.subtract(data[i,:], self.mean)
@@ -119,49 +103,6 @@ class TDistribution(object):
 		L = t1-t2-t3-t4-t5
 		
 		return L
-	
-	# checks if termination condition is achieved
-	def terimation(self, data):
-		new_L = self.calcualte_overall_likelihood(data)
-		if (self.L is None):
-			self.L = new_L
-			return False
-		
-		diff = new_L - self.L
-		
-		# print "percentage change = ", diff/float(abs(self.L))
-		if (diff > 0):
-			self.L = new_L
-			return False
-		
-		return True
-
-	def run(self, data):
-		i = 0
-		data = np.matrix(data, dtype=float)
-		self.setup(data)
-		# print "self.weights = ", self.weights
-		# print "self.prior_probs = ", self.prior_probs
-		
-		while (i < self.max_iter):
-			i += 1
-			# print "data.shape = ", data.shape
-			self.expectation(data)
-			self.maximization(data)
-
-			if self.terimation(data):
-				break;
-
-			# print "Completed Iteration ", i
-
-		print "Finished EM. Last Iteration Number = ", i, " max iter = ", self.max_iter
-		print "final self.v = ", self.v
-		print "final self.mean = ", self.mean
-		# print "self.cov = ", self.cov
-
-		# for i in range(self.n_components):
-		# 	m = multivariate_normal(mean=self.params[i]['mean'], cov=self.params[i]['cov'])
-		# 	self.models[i] = m
 	
 	# Function for initial setup for EM
 	def setup(self, data):
@@ -192,19 +133,3 @@ class TDistribution(object):
 
 		return posterior_probs
 
-
-
-if __name__ == '__main__':
-	dl = DataLoader("/Users/iankurgarg/Code/Vision/Project-1/image-classification/images-2")
-
-	face, non_face = dl.load_data(train=1)
-
-	# show_mean(face, dim3=3)
-	# show_cov(face, dim3=3)
-
-	m = Model3()
-	m.run(face)
-
-	# test_face, test_non_face = dl.load_data(train=0)
-	# testX = np.concatenate((test_face, test_non_face))
-	# testY = [1]*len(test_face) + [0]*len(test_non_face)
