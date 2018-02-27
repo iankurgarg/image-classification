@@ -13,7 +13,7 @@ from sklearn.decomposition import PCA
 from Visualization import *
 
 
-class EM(object):
+class TDistribution(object):
 	def __init__(self, n_components=2):
 		self.n_components = n_components
 		self.max_v = 100

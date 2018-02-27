@@ -1,18 +1,13 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scipy.stats import multivariate_normal
-from data_io.DataLoader import DataLoader
 import numpy as np
-
-from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import normalize
-from sklearn.decomposition import PCA
-
-from Visualization import *
+from scipy.stats import multivariate_normal
 
 
-class EM(object):
+
+class MixtureOfGaussian(object):
 	def __init__(self, n_components=2):
 		self.thresh = 0.5
 		self.n_components = n_components
@@ -153,20 +148,3 @@ class EM(object):
 		posterior_probs = np.sum(posterior_probs, axis=1)
 
 		return posterior_probs
-
-
-
-if __name__ == '__main__':
-	dl = DataLoader("/Users/iankurgarg/Code/Vision/Project-1/image-classification/images-2")
-
-	face, non_face = dl.load_data(train=1)
-
-	# show_mean(face, dim3=3)
-	# show_cov(face, dim3=3)
-
-	m = Model2()
-	m.run(face)
-
-	# test_face, test_non_face = dl.load_data(train=0)
-	# testX = np.concatenate((test_face, test_non_face))
-	# testY = [1]*len(test_face) + [0]*len(test_non_face)
