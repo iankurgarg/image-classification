@@ -54,10 +54,10 @@ class Model(BaseModel):
 			self.dist2.run(pca_non_face)
 		elif (self.model_type == 'factor'):
 			self.dist1 = FactorAnalyzer()
-			self.dist1.run(pca_face)
+			self.dist1.run(pca_face, 5)
 
 			self.dist2 = FactorAnalyzer()
-			self.dist2.run(pca_non_face)
+			self.dist2.run(pca_non_face, 5)
 
 
 

@@ -17,7 +17,7 @@ class TDistribution(object):
 	def __init__(self, n_components=2):
 		self.n_components = n_components
 		self.max_v = 100
-		self.mean, self.cov, self.v = None, None, float(self.max_v)
+		self.mean, self.cov, self.v = None, None, float(100)
 		
 		self.delta, self.Eh, self.Elogh = None, None, None
 		
@@ -37,7 +37,7 @@ class TDistribution(object):
 
 	def tCost(self, v):
 		v = float(v)
-		t1 = (v/2)*np.log(v/2)
+		t1 = -(v/2)*np.log(v/2)
 		t2 = (gammaln(v/2))
 
 		cost = 0.0
@@ -88,7 +88,7 @@ class TDistribution(object):
 			self.delta[i,0] = temp2[0,0]
 
 		# print "sum(delta) = ", np.sum(self.delta)
-		# print "self.v = ", self.v
+		print "self.v = ", self.v
 		# print "np.reciprocal(self.delta + self.v) = ", np.sum(np.reciprocal(self.delta + self.v, dtype=float))
 		# print "self.v + self.D = ", self.v + self.D
 		self.Eh = np.reciprocal(self.delta + self.v, dtype=float) * (self.v + self.D)
@@ -130,7 +130,7 @@ class TDistribution(object):
 		diff = new_L - self.L
 		
 		# print "percentage change = ", diff/float(abs(self.L))
-		if (diff > 0.001):
+		if (diff > 0):
 			self.L = new_L
 			return False
 		
@@ -155,8 +155,8 @@ class TDistribution(object):
 			# print "Completed Iteration ", i
 
 		print "Finished EM. Last Iteration Number = ", i, " max iter = ", self.max_iter
-		# print "self.v = ", self.v
-		# print "self.mean = ", self.mean
+		print "final self.v = ", self.v
+		print "final self.mean = ", self.mean
 		# print "self.cov = ", self.cov
 
 		# for i in range(self.n_components):
@@ -173,7 +173,6 @@ class TDistribution(object):
 		# print "data type = ", type(data)
 		# print "self.mean.shape = ", self.mean.shape
 		self.cov = np.cov(data, rowvar=False)
-		self.v = 1000
 		self.tcosts = [0]*self.max_v
 
 		# self.L = self.calcualte_overall_likelihood(data)

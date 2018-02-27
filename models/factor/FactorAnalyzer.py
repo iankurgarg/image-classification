@@ -2,15 +2,9 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scipy.stats import multivariate_normal
-from scipy.special import digamma, gammaln, gamma
-from data_io.DataLoader import DataLoader
 import numpy as np
 
-from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import normalize
-from sklearn.decomposition import PCA
-
-from Visualization import *
 
 
 class FactorAnalyzer(object):
@@ -21,67 +15,55 @@ class FactorAnalyzer(object):
 
 		self.Eh, self.Ehh = None, None
 		
-		self.max_iter = 40
-		self.models = {}
+		self.max_iter = 400
 		self.D = 1.0
 		self.Identity = None
 		# np.random.seed(1)
 
 	def maximization(self, data):
-		temp = np.multiply(data, self.Eh)
-		# N = np.sum(self.Eh)
-		# print "N = ", N
-		self.mean = np.mean(temp, axis=0)/np.sum(self.Eh)
+		s = self.phi.shape
+		I = len(data)
+		t1 = np.matrix(np.zeros((s[0], s[1])))
+		for i in range(I):
+			t1 += data[i,:].transpose()*self.Eh[:,i].transpose()
 
-		self.cov = np.zeros((data.shape[1], data.shape[1]), dtype=float)
-		for i in range(data.shape[0]):
-			assert data[i,:].shape == self.mean.shape, str(i) + " data.shape = " + str(data.shape) + ":" + str(data[i, :].shape) + " != " + str(self.mean.shape)
-			temp = np.subtract(data[i,:], self.mean)
-			temp2 = temp.transpose() * temp
-			assert temp2.shape == self.cov.shape
-			self.cov += (self.Eh[i,0]*temp2)
+		t2 = np.linalg.inv(np.sum(self.Ehh, axis=0))
+		new_phi = t1*t2
+		assert self.phi.shape == new_phi.shape
+		self.phi = new_phi
 
-		self.cov /= np.sum(self.Eh)
-		
-		for i in range(1, self.max_v+1):
-			self.tcosts[i-1] = self.tCost(i)
 
-		# print "self.tcosts = ", self.tcosts
-		# print "np.argmin(self.tcosts) = ", np.argmin(self.tcosts)
-		self.v = float(np.argmin(self.tcosts) + 1)
+		new_cov = np.matrix(np.zeros((s[0],s[0])))
+		for i in range(I):
+			t1 = data[i,:].transpose()*data[i,:]
+			t2 = self.phi*self.Eh[:,i]*data[i,:]
 
+			new_cov += (t1-t2)
+
+		new_cov /= I
+		assert new_cov.shape == self.cov.shape
+		for i in range(len(self.cov)):
+			self.cov[i,i] = new_cov[i,i]
+
+		self.update_model()
 
 	def expectation(self, data):
 		cov_inv = np.linalg.inv(self.cov)
 		
 		t1 = np.linalg.inv((self.phi.transpose()*cov_inv*self.phi) + self.Identity)
 		
-
+		for i in range(len(data)):
+			self.Eh[:,i] = t1*self.phi.transpose()*cov_inv*(data[i,:] - self.mean).transpose()
+			self.Ehh[i] = t1  + (self.Eh[:,i] * self.Eh[:,i].transpose())
 
 
 	def calcualte_overall_likelihood(self, data):
-		for i in range(len(self.delta)):
-			temp = np.subtract(data[i,:], self.mean)
-			temp2 = (temp * np.linalg.inv(self.cov)) * temp.transpose()
-			self.delta[i,0] = temp2[0,0]
-		
-		I = data.shape[0]
+		w = self.pdf(data)
+		return np.sum(np.log(w))
 
-		# print "(self.v+self.D)/2) = ", (self.v+self.D)/2
-		t1 = I*(gammaln(float(self.v+self.D)/2))
-		t2 = I*self.D*np.log(self.v*np.pi)/2
-		t3 = I*np.log(np.linalg.det(self.cov))/2
-		t4 = I*(gammaln(self.v/2))
-		t5 = 0.0
-
-		for i in range(self.Eh.shape[0]):
-			t5 +=  np.log(1 + self.delta[i,0]/self.v)/2
-
-		t5 = (self.v + self.D)*t5
-
-		L = t1-t2-t3-t4-t5
-		
-		return L
+	def update_model(self):
+		self.actual_cov = self.phi*self.phi.transpose() + self.cov
+		self.model = multivariate_normal(mean=np.array(self.mean).ravel(), cov=self.actual_cov)
 	
 	# checks if termination condition is achieved
 	def terimation(self, data):
@@ -91,9 +73,9 @@ class FactorAnalyzer(object):
 			return False
 		
 		diff = new_L - self.L
-		
+		# print "new_L = ", new_L, " L = ", self.L
 		# print "percentage change = ", diff/float(abs(self.L))
-		if (diff > 0.001):
+		if (diff > 0 and diff/float(abs(self.L)) > 0.00001) :
 			self.L = new_L
 			return False
 		
@@ -103,7 +85,7 @@ class FactorAnalyzer(object):
 		i = 0
 		data = np.matrix(data, dtype=float)
 		self.setup(data, K)
-		
+
 		while (i < self.max_iter):
 			i += 1
 			# print "data.shape = ", data.shape
@@ -121,33 +103,34 @@ class FactorAnalyzer(object):
 	# Function for initial setup for EM
 	def setup(self, data, K):
 		n_samples, self.D = data.shape
-		self.D = float(self.D)
 
 		self.mean = np.mean(data, axis=0)
-		self.cov = np.zeros((self.D, self.D), dtype=float)
+		self.cov = np.matrix(np.zeros((self.D, self.D), dtype=float))
 
 		for i in range(self.D):
-			self.cov[i,i] = np.cov(self.data[:,i])
+			self.cov[i,i] = np.var(data[:,i])
 
-		self.phi = np.random.rand(self.D, K)
+		self.phi = np.matrix(np.random.rand(self.D, K))
 		self.Identity = np.identity(K)
 
-		# self.L = self.calcualte_overall_likelihood(data)
+		self.Eh = np.matrix(np.zeros((K, n_samples)))
+		self.Ehh = np.zeros((n_samples, K, K))
+
+		# print "Setup Complete: "
+		# print "Mean = ", self.mean.shape
+		# print "Cov = ", self.cov.shape
+		# print "Eh = ", self.Eh.shape
+		# print "Ehh = ", self.Ehh.shape
+		# print "Identity = ", self.Identity.shape
+		# print "Phi = ", self.phi.shape
+
+		self.update_model()
+		self.L = self.calcualte_overall_likelihood(data)
+		# print "L = ", self.L
 
 	def pdf(self, X):
-		t1_num = gamma((self.v+self.D)/2)
-		t1_denom = pow(self.v*np.pi, self.D/2) * np.sqrt(np.linalg.det(self.cov)) * gamma(self.v/2)
+		return self.model.pdf(X)
 
-		temp = np.subtract(X, self.mean)
-		t2_num = (temp * np.linalg.inv(self.cov)) * temp.transpose()
-		t2_num = np.diag(t2_num)
-
-		t2 =  1 + (t2_num)/self.v
-		t2 = np.float_power(t2, -(self.v + self.D)/2)
-
-		posterior_probs = t2 * (t1_num/t1_denom)
-
-		return posterior_probs
 
 
 
