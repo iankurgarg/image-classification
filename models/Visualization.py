@@ -3,6 +3,7 @@ import numpy as np
 
 def show_mean(faces, dim3=1):
 	mean_face = np.mean(faces, axis=0).astype(np.uint8)
+	mean_face = np.array(mean_face)
 	if dim3 == 1:
 		dims = (60,60)
 	else:
@@ -24,3 +25,9 @@ def show_cov(faces, dim3=1):
 
 def ROV(fpr, tpr):
 	plt.plot(fpr, tpr)
+	plt.xlim((0,1))
+	plt.ylim((0,1))
+	plt.title('ROC')
+	plt.xlabel('False Positive Rate')
+	plt.ylabel('True Positive Rate')
+	plt.show()

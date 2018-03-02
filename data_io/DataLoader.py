@@ -4,13 +4,14 @@ import math
 import numpy as np
 
 class DataLoader(object):
-	def __init__(self, data_dir):
+	def __init__(self, data_dir, rgb=0):
 		self.train_dir = os.path.join(data_dir, 'train')
 		self.test_dir = os.path.join(data_dir, 'test')
 
 		self.dir = {}
 		self.dir[1] = self.train_dir
 		self.dir[0] = self.test_dir
+		self.rgb = rgb
 
 		assert os.path.exists(self.train_dir), "train dir doesn't exists"
 		assert os.path.exists(self.test_dir), "test dir doesn't exists"
@@ -62,7 +63,7 @@ class DataLoader(object):
 
 	def load_image(self, img_path):
 		try:
-			_img = cv2.imread(img_path).flatten()
+			_img = cv2.imread(img_path, self.rgb).flatten()
 			return _img
 		except:
 			print "Unable to laod image from ", img_path

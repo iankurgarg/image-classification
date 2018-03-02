@@ -93,7 +93,7 @@ class Model(BaseModel):
 
 
 if __name__ == '__main__':
-	dl = DataLoader("/Users/iankurgarg/Code/Vision/Project-1/image-classification/images-2")
+	dl = DataLoader("/Users/iankurgarg/Code/Vision/Project-1/image-classification/images-2", rgb=0)
 
 	face, non_face = dl.load_data(train=1)
 
