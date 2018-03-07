@@ -26,7 +26,7 @@ class FactorAnalyzer(BaseEM):
 		I = len(data)
 		t1 = np.matrix(np.zeros((s[0], s[1])))
 		for i in range(I):
-			t1 += data[i,:].transpose()*self.Eh[:,i].transpose()
+			t1 += (data[i,:] - self.mean).transpose()*self.Eh[:,i].transpose()
 
 		t2 = np.linalg.inv(np.sum(self.Ehh, axis=0))
 		new_phi = t1*t2
@@ -36,8 +36,8 @@ class FactorAnalyzer(BaseEM):
 
 		new_cov = np.matrix(np.zeros((s[0],s[0])))
 		for i in range(I):
-			t1 = data[i,:].transpose()*data[i,:]
-			t2 = self.phi*self.Eh[:,i]*data[i,:]
+			t1 = (data[i,:] - self.mean).transpose()*(data[i,:] - self.mean)
+			t2 = self.phi*self.Eh[:,i]*(data[i,:] - self.mean)
 
 			new_cov += (t1-t2)
 
@@ -82,6 +82,13 @@ class FactorAnalyzer(BaseEM):
 
 	def pdf(self, X):
 		return self.model.pdf(X)
+
+	def mean_(self):
+		return [np.array(self.mean).ravel()]
+
+	def variance_(self):
+		return [self.actual_cov]
+
 
 
 

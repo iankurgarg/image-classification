@@ -95,3 +95,16 @@ class MixtureOfGaussian(BaseEM):
 		posterior_probs = np.sum(posterior_probs, axis=1)
 
 		return posterior_probs
+
+	def mean_(self):
+		means = []
+		for a in self.params:
+			m = self.params[a]['mean']
+			means.append(np.array(m).ravel())
+		return means
+
+	def variance_(self):
+		variances = []
+		for a in self.params:
+			variances.append(self.params[a]['cov'])
+		return variances

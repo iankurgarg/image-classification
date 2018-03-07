@@ -8,8 +8,8 @@ def show_mean(faces, dim3=1):
 		dims = (60,60)
 	else:
 		dims = (60,60, dim3)
-	plt.imshow(mean_face.reshape(dims), cmap="gray");
-	plt.show();
+	plt.imshow(mean_face.reshape(dims), cmap="gray")
+	plt.show()
 
 def show_cov(faces, dim3=1):
 	faces2 = faces.astype(np.float32)/256
@@ -20,14 +20,15 @@ def show_cov(faces, dim3=1):
 		dims = (60,60)
 	else:
 		dims = (60,60, dim3)
-	plt.imshow(cov_diag.reshape(dims), cmap="gray");
-	plt.show();
+	plt.imshow(cov_diag.reshape(dims), cmap="gray")
+	plt.show()
 
-def ROV(fpr, tpr):
+def ROC(fpr, tpr, title):
+	plt.figure(1, figsize=(10, 10))
 	plt.plot(fpr, tpr)
 	plt.xlim((0,1))
 	plt.ylim((0,1))
-	plt.title('ROC')
+	plt.title(title)
 	plt.xlabel('False Positive Rate')
 	plt.ylabel('True Positive Rate')
 	plt.show()

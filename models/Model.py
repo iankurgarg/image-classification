@@ -41,10 +41,10 @@ class Model(BaseModel):
 			self.dist2 = Gaussian()
 			self.dist2.run(pca_non_face)
 		elif (self.model_type == 'mog'):
-			self.dist1 = MixtureOfGaussian()
+			self.dist1 = MixtureOfGaussian(4)
 			self.dist1.run(pca_face)
 
-			self.dist2 = MixtureOfGaussian()
+			self.dist2 = MixtureOfGaussian(4)
 			self.dist2.run(pca_non_face)
 		elif (self.model_type == 't-dist'):
 			self.dist1 = TDistribution()
@@ -53,10 +53,10 @@ class Model(BaseModel):
 			self.dist2 = TDistribution()
 			self.dist2.run(pca_non_face)
 		elif (self.model_type == 'factor'):
-			self.dist1 = FactorAnalyzer(5)
+			self.dist1 = FactorAnalyzer(50)
 			self.dist1.run(pca_face)
 
-			self.dist2 = FactorAnalyzer()
+			self.dist2 = FactorAnalyzer(50)
 			self.dist2.run(pca_non_face)
 
 
@@ -65,10 +65,55 @@ class Model(BaseModel):
 		self.scaler_model = StandardScaler()
 		scaledX = self.scaler_model.fit_transform(trainX, trainY)
 
-		self.pca_model = PCA(n_components=30)
+		self.pca_model = PCA(n_components=10)
 		pcaX = self.pca_model.fit_transform(scaledX)
 
 		return pcaX
+
+	def converted_mean(self):
+		converted_means = []
+		w = self.dist1.mean_()
+		c = self.pca_model.components_
+		
+		for a in w:
+			cmean = np.average(c, axis=0, weights=a)
+			converted_means.append(cmean)
+
+		c = int(np.sqrt(len(converted_means)))
+		if (c*c < len(converted_means)):
+			c += 1
+
+		plt.figure(1, figsize=(10, 10))
+		plt.title('Mean')
+		for i, a in enumerate(converted_means):
+			plt.subplot((100*c)+(10*c) + i + 1)
+			plt.imshow(a.reshape((60,60)), cmap="gray")
+
+		plt.show()
+		return converted_means
+
+	def converted_covariance(self):
+		converted_vars = []
+		w = self.dist1.variance_()
+		c = np.matrix(self.pca_model.components_)
+		for a in w:
+			cmean = c.transpose()*a*c
+			converted_vars.append(cmean)
+
+		c = int(np.sqrt(len(converted_vars)))
+		if (c*c < len(converted_vars)):
+			c += 1
+
+		plt.figure(1, figsize=(10, 10))
+		plt.title('Covariance')
+		for i, a in enumerate(converted_vars):
+			plt.subplot((100*c)+(10*c) + i + 1)
+			cov_diag = np.diag(a)
+			plt.imshow(cov_diag.reshape((60,60)), cmap="gray")
+
+		plt.show()
+
+		return converted_vars
 
 	def predict(self, img):
 		if (len(img.shape) == 1):
@@ -97,7 +142,7 @@ if __name__ == '__main__':
 
 	face, non_face = dl.load_data(train=1)
 
-	m = Model(mtype='t-dist')
+	m = Model(mtype='factor')
 	m.fit(face, non_face)
 
 	test_face, test_non_face = dl.load_data(train=0)

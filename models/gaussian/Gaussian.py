@@ -12,10 +12,16 @@ class Gaussian(object):
 		self.model = None
 
 	def run(self, data):
-		mean = np.mean(data, axis=0)
-		cov = np.cov(data, rowvar=False)
+		self.mean = np.mean(data, axis=0)
+		self.cov = np.cov(data, rowvar=False)
 
-		self.model = multivariate_normal(mean=mean, cov=cov)
+		self.model = multivariate_normal(mean=self.mean, cov=self.cov)
 
 	def pdf(self, X):
 		return self.model.pdf(X)
+
+	def mean_(self):
+		return [self.mean]
+
+	def variance_(self):
+		return [self.cov]

@@ -4,13 +4,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 from scipy.stats import multivariate_normal
 from scipy.special import digamma, gammaln, gamma
+from scipy.optimize import minimize
 
 from BaseEM import BaseEM
 
 class TDistribution(BaseEM):
 	def __init__(self, n_components=2):
 		self.n_components = n_components
-		self.max_v = 100
+		self.max_v = 1000
 		self.mean, self.cov, self.v = None, None, float(100)
 		
 		self.delta, self.Eh, self.Elogh = None, None, None
@@ -20,20 +21,6 @@ class TDistribution(BaseEM):
 		self.tcosts = []
 
 		# np.random.seed(1)
-
-	def tCost(self, v):
-		v = float(v)
-		t1 = -(v/2)*np.log(v/2)
-		t2 = (gammaln(v/2))
-
-		cost = 0.0
-
-		for i in range(self.Elogh.shape[0]):
-			t3 = -((v/2) - 1)*self.Elogh[i,0]
-			t4 = (v/2)*self.Eh[i,0]
-			cost += (t1 + t2 + t3 + t4)
-
-		return -cost
 
 	def maximization(self, data):
 		temp = np.multiply(data, self.Eh)
@@ -50,9 +37,26 @@ class TDistribution(BaseEM):
 			self.cov += (self.Eh[i,0]*temp2)
 
 		self.cov /= np.sum(self.Eh)
+
+		def tCost(v):
+			if (v == 0):
+				return sys.maxint
+
+			v = float(abs(v))
+			t1 = -(v/2)*np.log(v/2)
+			t2 = (gammaln(v/2))
+
+			cost = 0.0
+
+			for i in range(self.Elogh.shape[0]):
+				t3 = -((v/2) - 1)*self.Elogh[i,0]
+				t4 = (v/2)*self.Eh[i,0]
+				cost += (t1 + t2 + t3 + t4)
+
+			return -cost
 		
-		for i in range(1, self.max_v+1):
-			self.tcosts[i-1] = self.tCost(i)
+		res = minimize(tCost, self.v)
+		self.v = float(int(res.x))
 
 		# print "self.tcosts = ", self.tcosts
 		# print "np.argmin(self.tcosts) = ", np.argmin(self.tcosts)
@@ -111,8 +115,7 @@ class TDistribution(BaseEM):
 		self.delta = np.matrix([1]*n_samples, dtype=float).transpose()
 
 		self.mean = np.mean(data, axis=0)
-		# print "data type = ", type(data)
-		# print "self.mean.shape = ", self.mean.shape
+		# print "data type = ", typenp.array().ravel()		# print "self.mean.shape = ", self.mean.shape
 		self.cov = np.cov(data, rowvar=False)
 		self.tcosts = [0]*self.max_v
 
@@ -132,4 +135,10 @@ class TDistribution(BaseEM):
 		posterior_probs = t2 * (t1_num/t1_denom)
 
 		return posterior_probs
+
+	def mean_(self):
+		return [np.array(self.mean).ravel()]
+
+	def variance_(self):
+		return [(self.v/(self.v-2))*(self.cov)]
 
