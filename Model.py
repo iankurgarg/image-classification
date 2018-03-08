@@ -1,5 +1,6 @@
 import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+sys.path.append(path)
 
 from scipy.stats import multivariate_normal
 from data_io.DataLoader import DataLoader
