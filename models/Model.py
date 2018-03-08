@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scipy.stats import multivariate_normal
 from data_io.DataLoader import DataLoader
 import numpy as np
+import argparse
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -138,12 +139,21 @@ class Model(BaseModel):
 
 
 if __name__ == '__main__':
-	dl = DataLoader("/Users/iankurgarg/Code/Vision/Project-1/image-classification/images-2", rgb=0)
+	parser = argparse.ArgumentParser(description="Run all Models")
+	parser.add_argument('-i', '--input', action="store", dest="input_dir", help="Directory containing input images <path>", required=True)
+	parser.add_argument('-m', '--model', action="store", dest="model", help="Model to be run", choices=['g', 'mog', 't-dist', 'factor'], required=True)
+
+	options = parser.parse_args(sys.argv[1:])
+
+	dl = DataLoader(options.input_dir, rgb=0)
 
 	face, non_face = dl.load_data(train=1)
 
-	m = Model(mtype='factor')
+	m = Model(mtype=options.model)
 	m.fit(face, non_face)
+
+	means = m.converted_mean()
+	covars = m.converted_covariance()
 
 	test_face, test_non_face = dl.load_data(train=0)
 	testX = np.concatenate((test_face, test_non_face))
