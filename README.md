@@ -9,10 +9,10 @@ to print the help message. This will print instructions on how to run a specific
 ./ <br />
 ./train <br />
 ./train/face <br />
-./train/non_face <br />
+./train/non-face <br />
 ./test <br />
 ./test/face <br />
-./test/non_face <br />
+./test/non-face <br />
 
 
 ### Code can also be run from python notebook TestingModels.ipynb
