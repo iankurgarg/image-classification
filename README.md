@@ -2,7 +2,7 @@
 
 `python Model.py -h`
 
-## to print the help message. This will print instructions on how to run a specific model
+to print the help message. This will print instructions on how to run a specific model
 
 ## Data directory should contains following structure
 
@@ -15,4 +15,4 @@
 ./test/non_face
 
 
-## Code can also be run from python notebook TestingModels.ipynb
+### Code can also be run from python notebook TestingModels.ipynb
