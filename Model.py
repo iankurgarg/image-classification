@@ -33,8 +33,8 @@ class Model(BaseModel):
 
 		pcaX = self.preprocess(trainX, trainY)
 
-		pca_face = pcaX[:1000]
-		pca_non_face = pcaX[1000:]
+		pca_face = pcaX[:len(face)]
+		pca_non_face = pcaX[len(face):]
 
 		if (self.model_type == 'g'):
 			self.dist1 = Gaussian()
