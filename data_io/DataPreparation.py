@@ -1,4 +1,4 @@
-import os
+import os, sys
 
 import cv2
 from PIL import Image, ImageStat, ImageChops
@@ -43,7 +43,7 @@ class DataPreparation(object):
 		persons = [x for x in persons if os.path.isdir(os.path.join(self.input_dir, x))]
 		random.shuffle(persons)
 		N = len(persons)
-		tN = int(0.5*N)
+		tN = int(0.8*N)
 		train_persons = persons[:tN]
 		test_persons = persons[tN:]
 
@@ -70,7 +70,9 @@ class DataPreparation(object):
 		if (len(persons) >= num):
 			images_per_person = 1
 		else:
-			images_per_person = int(len(persons)/num) + 1
+			images_per_person = int(num/len(persons)) + 1
+
+		print "Number of persons = ", len(persons), " images per person = ", images_per_person
 
 		face_images = []
 		face_names = []
@@ -103,8 +105,10 @@ class DataPreparation(object):
 				break;
 
 			x, y, w, h = self.get_bounding_box_info(img)
-
-			_bg_img = self.generate_bg_image(img, (x, y, x+w, y+h))
+			try:
+				_bg_img = self.generate_bg_image(img, (x, y, x+w, y+h))
+			except:
+				_bg_img = None
 			if (_bg_img is not None):
 				background_images.append(_bg_img)
 				i += 1
@@ -258,6 +262,6 @@ class DataPreparation(object):
 			i += 1
 
 if __name__ == '__main__':
-	d = DataPreparation('/Users/iankurgarg/Code/Vision/Project-1/umdfaces/umdfaces_batch3', '/Users/iankurgarg/Code/Vision/Project-1/image-classification/images-2')
-	d.run(1000, 1000)
+	d = DataPreparation('/Users/iankurgarg/Code/Vision/Project-1/umdfaces/umdfaces_batch3', sys.argv[1])
+	d.run(10000, 1000)
 
